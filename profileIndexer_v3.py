@@ -39,8 +39,16 @@ def getLastIndex(indexFile):
     return profileIndex, startDate
 
 
+def get_s3_kwargs():
+    aws_key = os.environ.get("AWS_KEY")
+    aws_secret = os.environ.get("AWS_SECRET")
+    
+    s3_kwargs = {'key': aws_key, 'secret': aws_secret}
+    return s3_kwargs
+
+
 def loadData_zarr(zarrDir):
-    fs = s3fs.S3FileSystem(anon=True)
+    fs = s3fs.S3FileSystem(**get_s3_kwargs())
     zarr_store = fs.get_mapper(zarrDir)
     ds = xr.open_zarr(zarr_store, consolidated=True)
 
@@ -165,9 +173,9 @@ def main():
     if "zarr" in args.dataSource:
         logger.info("loading zarr file")
         ds = loadData_zarr(profilerDict["zarrFile"])
-    elif "gc_thredds" in args.dataSource:
-        logger.info("loading gold copy")
-        ds = load_gc_thredds(profilerDict["gc_thredds_dir"])
+    # elif "gc_thredds" in args.dataSource: # thredds gc deprecated
+    #     logger.info("loading gold copy")
+    #     ds = load_gc_thredds(profilerDict["gc_thredds_dir"])
     else:
         logger.info("loading local data")
         ds = loadData_local(args.dataSource)
